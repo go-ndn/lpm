@@ -6,10 +6,10 @@ import (
 
 func TestLPM(t *testing.T) {
 	m := New()
-	m.Set([]Component{"1", "2", "3"}, "hello")
-	m.Set([]Component{"1", "2"}, "world")
-	m.Set([]Component{"1", "2", "4"}, 124)
-	m.Set([]Component{"1", "2", "5", "6"}, 1256)
+	m.Add([]Component{"1", "2", "3"}, "hello")
+	m.Add([]Component{"1", "2"}, "world")
+	m.Add([]Component{"1", "2", "4"}, 124)
+	m.Add([]Component{"1", "2", "5", "6"}, 1256)
 
 	hello := m.Match([]Component{"1", "2", "3", "4"})
 	if hello == nil || hello.(string) != "hello" {
@@ -20,7 +20,7 @@ func TestLPM(t *testing.T) {
 		t.Fatal("not world")
 	}
 
-	m.Update([]Component{"1", "2", "3", "4"}, func(interface{}) interface{} { return nil })
+	m.Remove([]Component{"1", "2", "3", "4"})
 	null := m.Match([]Component{"1", "2", "3", "4"})
 	if null != nil {
 		t.Fatal("should be nil")
