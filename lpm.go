@@ -2,19 +2,19 @@
 package lpm
 
 import (
+	"fmt"
+	"strings"
 	"sync"
 )
 
-type Component string
-
 type node struct {
-	table map[Component]*node
+	table map[string]*node
 	entry interface{}
 }
 
 func newNode() *node {
 	return &node{
-		table: make(map[Component]*node),
+		table: make(map[string]*node),
 	}
 }
 
@@ -29,7 +29,15 @@ func New() *Matcher {
 	}
 }
 
-func update(n *node, cs []Component, f func(interface{}) interface{}, isPrefix bool) {
+func newKey(cs fmt.Stringer) []string {
+	s := strings.Trim(cs.String(), "/")
+	if s == "" {
+		return nil
+	}
+	return strings.Split(s, "/")
+}
+
+func update(n *node, cs []string, f func(interface{}) interface{}, isPrefix bool) {
 	if len(cs) == 0 || (isPrefix && len(n.table) == 0) {
 		n.entry = f(n.entry)
 		return
@@ -49,22 +57,22 @@ func update(n *node, cs []Component, f func(interface{}) interface{}, isPrefix b
 	}
 }
 
-func (this *Matcher) Add(cs []Component, i interface{}) {
+func (this *Matcher) Add(cs fmt.Stringer, i interface{}) {
 	this.m.Lock()
-	update(this.root, cs, func(interface{}) interface{} { return i }, false)
+	update(this.root, newKey(cs), func(interface{}) interface{} { return i }, false)
 	this.m.Unlock()
 }
 
-func (this *Matcher) Remove(cs []Component) {
+func (this *Matcher) Remove(cs fmt.Stringer) {
 	this.m.Lock()
-	update(this.root, cs, func(interface{}) interface{} { return nil }, true)
+	update(this.root, newKey(cs), func(interface{}) interface{} { return nil }, true)
 	this.m.Unlock()
 }
 
 // Update provides atomic RW on longest prefix's entry with full name
-func (this *Matcher) Update(cs []Component, f func(interface{}) interface{}, isPrefix bool) {
+func (this *Matcher) Update(cs fmt.Stringer, f func(interface{}) interface{}, isPrefix bool) {
 	this.m.Lock()
-	update(this.root, cs, f, isPrefix)
+	update(this.root, newKey(cs), f, isPrefix)
 	this.m.Unlock()
 }
 
@@ -81,7 +89,7 @@ func findEntry(n *node) interface{} {
 	return nil
 }
 
-func match(n *node, cs []Component, isPrefix bool) interface{} {
+func match(n *node, cs []string, isPrefix bool) interface{} {
 	if len(cs) == 0 || (isPrefix && len(n.table) == 0) {
 		if !isPrefix {
 			return findEntry(n)
@@ -97,17 +105,17 @@ func match(n *node, cs []Component, isPrefix bool) interface{} {
 }
 
 // Match finds longest prefix's entry with full name
-func (this *Matcher) Match(cs []Component) interface{} {
+func (this *Matcher) Match(cs fmt.Stringer) interface{} {
 	this.m.RLock()
 	defer this.m.RUnlock()
-	return match(this.root, cs, true)
+	return match(this.root, newKey(cs), true)
 }
 
 // Reverse Match finds full name's entry with longest prefix
-func (this *Matcher) RMatch(cs []Component) interface{} {
+func (this *Matcher) RMatch(cs fmt.Stringer) interface{} {
 	this.m.RLock()
 	defer this.m.RUnlock()
-	return match(this.root, cs, false)
+	return match(this.root, newKey(cs), false)
 }
 
 func list(n *node, prefix string) (es []string) {
