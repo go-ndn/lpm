@@ -38,7 +38,7 @@ func newKey(cs fmt.Stringer) []string {
 }
 
 func update(n *node, cs []string, f func(interface{}) interface{}, isPrefix bool) {
-	if len(cs) == 0 || (isPrefix && len(n.table) == 0) {
+	if len(cs) == 0 {
 		n.entry = f(n.entry)
 		return
 	}
@@ -46,6 +46,7 @@ func update(n *node, cs []string, f func(interface{}) interface{}, isPrefix bool
 	c, ok := n.table[first]
 	if !ok {
 		if isPrefix {
+			n.entry = f(n.entry)
 			return
 		}
 		c = newNode()
@@ -90,15 +91,18 @@ func findEntry(n *node) interface{} {
 }
 
 func match(n *node, cs []string, isPrefix bool) interface{} {
-	if len(cs) == 0 || (isPrefix && len(n.table) == 0) {
-		if !isPrefix {
-			return findEntry(n)
+	if len(cs) == 0 {
+		if isPrefix {
+			return n.entry
 		}
-		return n.entry
+		return findEntry(n)
 	}
 	first, rest := cs[0], cs[1:]
 	c, ok := n.table[first]
 	if !ok {
+		if isPrefix {
+			return n.entry
+		}
 		return nil
 	}
 	return match(c, rest, isPrefix)
