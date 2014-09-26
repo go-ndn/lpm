@@ -65,15 +65,11 @@ func update(n *node, cs []string, f func(interface{}) interface{}, isPrefix bool
 }
 
 func (this *Matcher) Add(cs fmt.Stringer, i interface{}) {
-	this.m.Lock()
-	update(this.root, newKey(cs), func(interface{}) interface{} { return i }, false)
-	this.m.Unlock()
+	this.Update(cs, func(interface{}) interface{} { return i }, false)
 }
 
 func (this *Matcher) Remove(cs fmt.Stringer) {
-	this.m.Lock()
-	update(this.root, newKey(cs), func(interface{}) interface{} { return nil }, false)
-	this.m.Unlock()
+	this.Update(cs, func(interface{}) interface{} { return nil }, false)
 }
 
 // Update provides atomic RW on longest prefix's entry with full name
