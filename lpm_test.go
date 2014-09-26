@@ -20,8 +20,8 @@ func TestLPM(t *testing.T) {
 		t.Fatal("not world")
 	}
 
-	m.Remove(Key("/1/2/3/4"))
-	world = m.Match(Key("/1/2/3/4"))
+	m.Remove(Key("/1/2/3"))
+	world = m.Match(Key("/1/2/3"))
 	if world == nil || world.(string) != "world" {
 		t.Fatal("should be world", world)
 	}

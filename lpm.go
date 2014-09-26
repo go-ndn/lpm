@@ -72,7 +72,7 @@ func (this *Matcher) Add(cs fmt.Stringer, i interface{}) {
 
 func (this *Matcher) Remove(cs fmt.Stringer) {
 	this.m.Lock()
-	update(this.root, newKey(cs), func(interface{}) interface{} { return nil }, true)
+	update(this.root, newKey(cs), func(interface{}) interface{} { return nil }, false)
 	this.m.Unlock()
 }
 
