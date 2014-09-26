@@ -134,8 +134,7 @@ func list(n *node, prefix string) (es []string) {
 		es = append(es, prefix)
 	}
 	for part, c := range n.table {
-		ces := list(c, prefix+"/"+part)
-		es = append(es, ces...)
+		es = append(es, list(c, prefix+"/"+part)...)
 	}
 	return
 }
