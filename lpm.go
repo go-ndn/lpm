@@ -83,17 +83,18 @@ func (this *Matcher) Update(cs fmt.Stringer, f func(interface{}) interface{}, is
 	this.m.Unlock()
 }
 
-func findEntry(n *node) interface{} {
-	if n.entry != nil {
-		return n.entry
+func bfs(ns ...*node) interface{} {
+	if len(ns) == 0 {
+		return nil
 	}
-	for _, c := range n.table {
-		ce := findEntry(c)
-		if ce != nil {
-			return ce
-		}
+	first, rest := ns[0], ns[1:]
+	if first.entry != nil {
+		return first.entry
 	}
-	return nil
+	for _, c := range first.table {
+		rest = append(rest, c)
+	}
+	return bfs(rest...)
 }
 
 func match(n *node, cs []string, isPrefix bool) interface{} {
@@ -101,7 +102,7 @@ func match(n *node, cs []string, isPrefix bool) interface{} {
 		if isPrefix {
 			return n.entry
 		}
-		return findEntry(n)
+		return bfs(n)
 	}
 	first, rest := cs[0], cs[1:]
 	c, ok := n.table[first]
