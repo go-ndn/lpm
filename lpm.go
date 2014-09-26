@@ -7,6 +7,12 @@ import (
 	"sync"
 )
 
+type Key string
+
+func (this Key) String() string {
+	return string(this)
+}
+
 type node struct {
 	table map[string]*node
 	entry interface{}
