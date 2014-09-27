@@ -31,5 +31,5 @@ func TestLPM(t *testing.T) {
 		t.Fatal("should be 1256", n)
 	}
 
-	t.Logf("%v\n", m.List())
+	t.Log(m.List())
 }
