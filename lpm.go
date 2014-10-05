@@ -140,3 +140,21 @@ func (this *Matcher) List() []string {
 	defer this.m.RUnlock()
 	return list(this.root, "")
 }
+
+func visit(n *node, f func(interface{}) interface{}) {
+	if n.entry != nil {
+		n.entry = f(n.entry)
+	}
+	for s, c := range n.table {
+		visit(c, f)
+		if c.entry == nil && len(c.table) == 0 {
+			delete(n.table, s)
+		}
+	}
+}
+
+func (this *Matcher) Visit(f func(interface{}) interface{}) {
+	this.m.Lock()
+	visit(this.root, f)
+	this.m.Unlock()
+}
