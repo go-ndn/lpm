@@ -15,7 +15,7 @@ func (this Key) String() string {
 
 type Matcher struct {
 	table map[string]interface{}
-	m    sync.RWMutex
+	m     sync.RWMutex
 }
 
 func New() *Matcher {
@@ -54,7 +54,6 @@ func (this *Matcher) Update(cs fmt.Stringer, f func(interface{}) interface{}, is
 	}
 }
 
-// Match finds longest prefix's entry with full name
 func (this *Matcher) Match(cs fmt.Stringer) interface{} {
 	this.m.RLock()
 	defer this.m.RUnlock()
@@ -68,19 +67,6 @@ func (this *Matcher) Match(cs fmt.Stringer) interface{} {
 			break
 		}
 		s = s[:idx]
-	}
-	return nil
-}
-
-// Reverse Match finds full name's entry with longest prefix
-func (this *Matcher) RMatch(cs fmt.Stringer) interface{} {
-	this.m.RLock()
-	defer this.m.RUnlock()
-	s := cs.String()
-	for e, v := range this.table {
-		if strings.HasPrefix(e, s) {
-			return v
-		}
 	}
 	return nil
 }

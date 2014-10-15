@@ -26,10 +26,5 @@ func TestLPM(t *testing.T) {
 		t.Fatal("should be world", world)
 	}
 
-	n := m.RMatch(Key("/1/2/5"))
-	if n == nil || n.(int) != 1256 {
-		t.Fatal("should be 1256", n)
-	}
-
 	t.Log(m.List())
 }
