@@ -54,6 +54,25 @@ func (this *Matcher) Update(cs fmt.Stringer, f func(interface{}) interface{}, is
 	}
 }
 
+func (this *Matcher) UpdateAll(cs fmt.Stringer, f func(string, interface{}) interface{}) {
+	this.m.Lock()
+	defer this.m.Unlock()
+	s := cs.String()
+	for {
+		if _, ok := this.table[s]; ok {
+			this.table[s] = f(s, this.table[s])
+			if this.table[s] == nil {
+				delete(this.table, s)
+			}
+		}
+		idx := strings.LastIndex(s, "/")
+		if idx == -1 {
+			return
+		}
+		s = s[:idx]
+	}
+}
+
 func (this *Matcher) Match(cs fmt.Stringer) interface{} {
 	this.m.RLock()
 	defer this.m.RUnlock()
