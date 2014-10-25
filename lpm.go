@@ -90,19 +90,10 @@ func (this *Matcher) Match(cs fmt.Stringer) interface{} {
 	return nil
 }
 
-func (this *Matcher) List() (es []string) {
-	this.m.RLock()
-	for e := range this.table {
-		es = append(es, e)
-	}
-	this.m.RUnlock()
-	return
-}
-
-func (this *Matcher) Visit(f func(interface{}) interface{}) {
+func (this *Matcher) Visit(f func(string, interface{}) interface{}) {
 	this.m.Lock()
 	for e := range this.table {
-		this.table[e] = f(this.table[e])
+		this.table[e] = f(e, this.table[e])
 		if this.table[e] == nil {
 			delete(this.table, e)
 		}

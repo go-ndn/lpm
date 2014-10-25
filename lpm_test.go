@@ -25,6 +25,4 @@ func TestLPM(t *testing.T) {
 	if world == nil || world.(string) != "world" {
 		t.Fatal("should be world", world)
 	}
-
-	t.Log(m.List())
 }
