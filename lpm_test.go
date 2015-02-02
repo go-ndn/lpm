@@ -5,7 +5,7 @@ import (
 )
 
 func TestLPM(t *testing.T) {
-	m := New()
+	m := NewThreadSafe()
 	m.Add(Key("/1/2/3"), "hello")
 	m.Add(Key("/1/2"), "world")
 	m.Add(Key("/1/2/4"), 124)
