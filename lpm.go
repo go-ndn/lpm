@@ -15,7 +15,6 @@ type Matcher interface {
 	Update(fmt.Stringer, func(interface{}) interface{}, bool)
 	UpdateAll(fmt.Stringer, func(string, interface{}) interface{})
 	Match(fmt.Stringer) interface{}
-	Visit(func(string, interface{}) interface{})
 }
 
 func New() Matcher {

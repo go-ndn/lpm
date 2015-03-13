@@ -69,12 +69,3 @@ func (this *threadUnsafeMatcher) Match(cs fmt.Stringer) interface{} {
 	}
 	return this.table[p[0]]
 }
-
-func (this *threadUnsafeMatcher) Visit(f func(string, interface{}) interface{}) {
-	for s := range this.table {
-		this.table[s] = f(s, this.table[s])
-		if this.table[s] == nil {
-			delete(this.table, s)
-		}
-	}
-}

@@ -43,9 +43,3 @@ func (this *threadSafeMatcher) Match(cs fmt.Stringer) interface{} {
 	defer this.RUnlock()
 	return this.m.Match(cs)
 }
-
-func (this *threadSafeMatcher) Visit(f func(string, interface{}) interface{}) {
-	this.Lock()
-	this.m.Visit(f)
-	this.Unlock()
-}
