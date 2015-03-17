@@ -6,40 +6,40 @@ import (
 )
 
 type threadSafeMatcher struct {
-	m threadUnsafeMatcher
+	u threadUnsafeMatcher
 	sync.RWMutex
 }
 
 func newThreadSafeMatcher() *threadSafeMatcher {
-	return &threadSafeMatcher{m: *newThreadUnsafeMatcher()}
+	return &threadSafeMatcher{u: *newThreadUnsafeMatcher()}
 }
 
-func (this *threadSafeMatcher) Add(cs fmt.Stringer, i interface{}) {
-	this.Lock()
-	this.m.Add(cs, i)
-	this.Unlock()
+func (m *threadSafeMatcher) Add(key fmt.Stringer, i interface{}) {
+	m.Lock()
+	m.u.Add(key, i)
+	m.Unlock()
 }
 
-func (this *threadSafeMatcher) Remove(cs fmt.Stringer) {
-	this.Lock()
-	this.m.Remove(cs)
-	this.Unlock()
+func (m *threadSafeMatcher) Remove(key fmt.Stringer) {
+	m.Lock()
+	m.u.Remove(key)
+	m.Unlock()
 }
 
-func (this *threadSafeMatcher) Update(cs fmt.Stringer, f func(interface{}) interface{}, isPrefix bool) {
-	this.Lock()
-	this.m.Update(cs, f, isPrefix)
-	this.Unlock()
+func (m *threadSafeMatcher) Update(key fmt.Stringer, f func(interface{}) interface{}, isPrefix bool) {
+	m.Lock()
+	m.u.Update(key, f, isPrefix)
+	m.Unlock()
 }
 
-func (this *threadSafeMatcher) UpdateAll(cs fmt.Stringer, f func(string, interface{}) interface{}) {
-	this.Lock()
-	this.m.UpdateAll(cs, f)
-	this.Unlock()
+func (m *threadSafeMatcher) UpdateAll(key fmt.Stringer, f func(string, interface{}) interface{}) {
+	m.Lock()
+	m.u.UpdateAll(key, f)
+	m.Unlock()
 }
 
-func (this *threadSafeMatcher) Match(cs fmt.Stringer) interface{} {
-	this.RLock()
-	defer this.RUnlock()
-	return this.m.Match(cs)
+func (m *threadSafeMatcher) Match(key fmt.Stringer) interface{} {
+	m.RLock()
+	defer m.RUnlock()
+	return m.u.Match(key)
 }

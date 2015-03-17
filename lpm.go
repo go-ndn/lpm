@@ -5,8 +5,8 @@ import "fmt"
 
 type Key string
 
-func (this Key) String() string {
-	return string(this)
+func (key Key) String() string {
+	return string(key)
 }
 
 type Matcher interface {

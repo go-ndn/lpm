@@ -13,59 +13,59 @@ func newThreadUnsafeMatcher() *threadUnsafeMatcher {
 	return &threadUnsafeMatcher{table: make(map[string]interface{})}
 }
 
-func (this *threadUnsafeMatcher) Add(cs fmt.Stringer, i interface{}) {
-	this.Update(cs, func(interface{}) interface{} { return i }, false)
+func (m *threadUnsafeMatcher) Add(key fmt.Stringer, i interface{}) {
+	m.Update(key, func(interface{}) interface{} { return i }, false)
 }
 
-func (this *threadUnsafeMatcher) Remove(cs fmt.Stringer) {
-	this.Update(cs, func(interface{}) interface{} { return nil }, false)
+func (m *threadUnsafeMatcher) Remove(key fmt.Stringer) {
+	m.Update(key, func(interface{}) interface{} { return nil }, false)
 }
 
-func (this *threadUnsafeMatcher) prefix(s string, longest bool) (p []string) {
+func (m *threadUnsafeMatcher) findPrefix(s string, longest bool) (prefix []string) {
 	for {
-		if _, ok := this.table[s]; ok {
-			p = append(p, s)
+		if _, ok := m.table[s]; ok {
+			prefix = append(prefix, s)
 			if longest {
 				break
 			}
 		}
-		idx := strings.LastIndex(s, "/")
-		if idx == -1 {
+		i := strings.LastIndex(s, "/")
+		if i == -1 {
 			break
 		}
-		s = s[:idx]
+		s = s[:i]
 	}
 	return
 }
 
-func (this *threadUnsafeMatcher) Update(cs fmt.Stringer, f func(interface{}) interface{}, isPrefix bool) {
-	s := cs.String()
+func (m *threadUnsafeMatcher) Update(key fmt.Stringer, f func(interface{}) interface{}, isPrefix bool) {
+	s := key.String()
 	if isPrefix {
-		p := this.prefix(s, true)
-		if len(p) == 0 {
+		prefix := m.findPrefix(s, true)
+		if len(prefix) == 0 {
 			return
 		}
-		s = p[0]
+		s = prefix[0]
 	}
-	this.table[s] = f(this.table[s])
-	if this.table[s] == nil {
-		delete(this.table, s)
+	m.table[s] = f(m.table[s])
+	if m.table[s] == nil {
+		delete(m.table, s)
 	}
 }
 
-func (this *threadUnsafeMatcher) UpdateAll(cs fmt.Stringer, f func(string, interface{}) interface{}) {
-	for _, s := range this.prefix(cs.String(), false) {
-		this.table[s] = f(s, this.table[s])
-		if this.table[s] == nil {
-			delete(this.table, s)
+func (m *threadUnsafeMatcher) UpdateAll(key fmt.Stringer, f func(string, interface{}) interface{}) {
+	for _, s := range m.findPrefix(key.String(), false) {
+		m.table[s] = f(s, m.table[s])
+		if m.table[s] == nil {
+			delete(m.table, s)
 		}
 	}
 }
 
-func (this *threadUnsafeMatcher) Match(cs fmt.Stringer) interface{} {
-	p := this.prefix(cs.String(), true)
-	if len(p) == 0 {
+func (m *threadUnsafeMatcher) Match(key fmt.Stringer) interface{} {
+	prefix := m.findPrefix(key.String(), true)
+	if len(prefix) == 0 {
 		return nil
 	}
-	return this.table[p[0]]
+	return m.table[prefix[0]]
 }
