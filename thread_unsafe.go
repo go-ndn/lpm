@@ -21,11 +21,11 @@ func (m *threadUnsafeMatcher) Remove(key fmt.Stringer) {
 	m.Update(key, func(interface{}) interface{} { return nil }, false)
 }
 
-func (m *threadUnsafeMatcher) findPrefix(s string, longest bool) (prefix []string) {
+func (m *threadUnsafeMatcher) findPrefix(s string, all bool) (prefix []string) {
 	for {
 		if _, ok := m.table[s]; ok {
 			prefix = append(prefix, s)
-			if longest {
+			if !all {
 				break
 			}
 		}
@@ -38,10 +38,10 @@ func (m *threadUnsafeMatcher) findPrefix(s string, longest bool) (prefix []strin
 	return
 }
 
-func (m *threadUnsafeMatcher) Update(key fmt.Stringer, f func(interface{}) interface{}, isPrefix bool) {
+func (m *threadUnsafeMatcher) Update(key fmt.Stringer, f func(interface{}) interface{}, lpm bool) {
 	s := key.String()
-	if isPrefix {
-		prefix := m.findPrefix(s, true)
+	if lpm {
+		prefix := m.findPrefix(s, false)
 		if len(prefix) == 0 {
 			return
 		}
@@ -54,7 +54,7 @@ func (m *threadUnsafeMatcher) Update(key fmt.Stringer, f func(interface{}) inter
 }
 
 func (m *threadUnsafeMatcher) UpdateAll(key fmt.Stringer, f func(string, interface{}) interface{}) {
-	for _, s := range m.findPrefix(key.String(), false) {
+	for _, s := range m.findPrefix(key.String(), true) {
 		m.table[s] = f(s, m.table[s])
 		if m.table[s] == nil {
 			delete(m.table, s)
@@ -63,7 +63,7 @@ func (m *threadUnsafeMatcher) UpdateAll(key fmt.Stringer, f func(string, interfa
 }
 
 func (m *threadUnsafeMatcher) Match(key fmt.Stringer) interface{} {
-	prefix := m.findPrefix(key.String(), true)
+	prefix := m.findPrefix(key.String(), false)
 	if len(prefix) == 0 {
 		return nil
 	}

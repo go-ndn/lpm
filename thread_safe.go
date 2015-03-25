@@ -26,9 +26,9 @@ func (m *threadSafeMatcher) Remove(key fmt.Stringer) {
 	m.Unlock()
 }
 
-func (m *threadSafeMatcher) Update(key fmt.Stringer, f func(interface{}) interface{}, isPrefix bool) {
+func (m *threadSafeMatcher) Update(key fmt.Stringer, f func(interface{}) interface{}, lpm bool) {
 	m.Lock()
-	m.u.Update(key, f, isPrefix)
+	m.u.Update(key, f, lpm)
 	m.Unlock()
 }
 
