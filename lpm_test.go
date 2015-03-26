@@ -1,40 +1,71 @@
 package lpm
 
 import (
+	"strings"
 	"testing"
 )
 
+type test struct {
+	in   string
+	want interface{}
+}
+
 func TestLPM(t *testing.T) {
 	m := NewThreadSafe()
-	m.Add(Key("/1/2/3"), 123)
-	m.Add(Key("/1/2"), 12)
-	m.Add(Key("/1/2/4"), 124)
-	m.Add(Key("/1/2/5/6"), 1256)
+	m.Add(Key("1"), 1)
+	m.Add(Key("1/2"), 12)
+	m.Add(Key("1/2/3"), 123)
+	m.Add(Key("1/2/4"), 124)
+	m.Add(Key("1/2/4/5"), 1245)
 
-	num := m.Match(Key("/1/2/3/4"))
-	if num == nil || num.(int) != 123 {
-		t.Fatal("want 123")
+	for _, test := range []test{
+		{"2", nil},
+		{"1/2/3/4", 123},
+	} {
+		got := m.Match(Key(test.in))
+		if got != test.want {
+			t.Fatalf("Match(%s) == %v, got %v", test.in, test.want, got)
+		}
 	}
 
-	m.Remove(Key("/1/2/3"))
-	num = m.Match(Key("/1/2/3"))
-	if num == nil || num.(int) != 12 {
-		t.Fatal("want 12")
+	m.Remove(Key("1/2/3"))
+	for _, test := range []test{
+		{"1/2/3", 12},
+	} {
+		got := m.Match(Key(test.in))
+		if got != test.want {
+			t.Fatalf("Match(%s) == %v, got %v", test.in, test.want, got)
+		}
 	}
 
-	m.Update(Key("/1/2/6"), func(interface{}) interface{} {
-		return 126
+	m.Update(Key("1/2/5"), func(interface{}) interface{} {
+		return 125
 	}, true)
-	num = m.Match(Key("/1/2"))
-	if num == nil || num.(int) != 126 {
-		t.Fatal("want 126")
+	for _, test := range []test{
+		{"1/2", 125},
+	} {
+		got := m.Match(Key(test.in))
+		if got != test.want {
+			t.Fatalf("Match(%s) == %v, got %v", test.in, test.want, got)
+		}
 	}
 
-	m.UpdateAll(Key("/1/2/3"), func(string, interface{}) interface{} {
+	m.UpdateAll(Key("1/2/4/5"), func(s string, i interface{}) interface{} {
+		if strings.Count(s, "/")%2 == 0 {
+			return 2
+		}
 		return 1
 	})
-	num = m.Match(Key("/1/2"))
-	if num == nil || num.(int) != 1 {
-		t.Fatal("want 1")
+	for _, test := range []test{
+		{"1/2/4/5", 1},
+		{"1/2/4", 2},
+		{"1/2/3", 1},
+		{"1/2", 1},
+		{"1", 2},
+	} {
+		got := m.Match(Key(test.in))
+		if got != test.want {
+			t.Fatalf("Match(%s) == %v, got %v", test.in, test.want, got)
+		}
 	}
 }
