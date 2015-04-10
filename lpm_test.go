@@ -10,47 +10,60 @@ type test struct {
 	want interface{}
 }
 
+func add(m Matcher, s string, v int) {
+	m.Update(s, func(interface{}) interface{} { return v }, false)
+}
+
+func remove(m Matcher, s string) {
+	m.Update(s, func(interface{}) interface{} { return nil }, false)
+}
+
+func match(m Matcher, s string) (r interface{}) {
+	m.Match(s, func(v interface{}) { r = v })
+	return
+}
+
 func TestLPM(t *testing.T) {
 	m := NewThreadSafe()
-	m.Add(Key("1"), 1)
-	m.Add(Key("1/2"), 12)
-	m.Add(Key("1/2/3"), 123)
-	m.Add(Key("1/2/4"), 124)
-	m.Add(Key("1/2/4/5"), 1245)
+	add(m, "1", 1)
+	add(m, "1/2", 12)
+	add(m, "1/2/3", 123)
+	add(m, "1/2/4", 124)
+	add(m, "1/2/4/5", 1245)
 
 	for _, test := range []test{
 		{"2", nil},
 		{"1/2/3/4", 123},
 	} {
-		got := m.Match(Key(test.in))
+		got := match(m, test.in)
 		if got != test.want {
 			t.Fatalf("Match(%s) == %v, got %v", test.in, test.want, got)
 		}
 	}
 
-	m.Remove(Key("1/2/3"))
+	remove(m, "1/2/3")
 	for _, test := range []test{
 		{"1/2/3", 12},
 	} {
-		got := m.Match(Key(test.in))
+		got := match(m, test.in)
 		if got != test.want {
 			t.Fatalf("Match(%s) == %v, got %v", test.in, test.want, got)
 		}
 	}
 
-	m.Update(Key("1/2/5"), func(interface{}) interface{} {
+	m.Update("1/2/5", func(interface{}) interface{} {
 		return 125
 	}, true)
 	for _, test := range []test{
 		{"1/2", 125},
 	} {
-		got := m.Match(Key(test.in))
+		got := match(m, test.in)
 		if got != test.want {
 			t.Fatalf("Match(%s) == %v, got %v", test.in, test.want, got)
 		}
 	}
 
-	m.UpdateAll(Key("1/2/4/5"), func(s string, i interface{}) interface{} {
+	m.UpdateAll("1/2/4/5", func(s string, i interface{}) interface{} {
 		if strings.Count(s, "/")%2 == 0 {
 			return 2
 		}
@@ -63,7 +76,7 @@ func TestLPM(t *testing.T) {
 		{"1/2", 1},
 		{"1", 2},
 	} {
-		got := m.Match(Key(test.in))
+		got := match(m, test.in)
 		if got != test.want {
 			t.Fatalf("Match(%s) == %v, got %v", test.in, test.want, got)
 		}

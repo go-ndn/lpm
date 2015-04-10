@@ -1,9 +1,6 @@
 package lpm
 
-import (
-	"fmt"
-	"strings"
-)
+import "strings"
 
 type threadUnsafeMatcher struct {
 	table map[string]interface{}
@@ -11,14 +8,6 @@ type threadUnsafeMatcher struct {
 
 func newThreadUnsafeMatcher() *threadUnsafeMatcher {
 	return &threadUnsafeMatcher{table: make(map[string]interface{})}
-}
-
-func (m *threadUnsafeMatcher) Add(key fmt.Stringer, i interface{}) {
-	m.Update(key, func(interface{}) interface{} { return i }, false)
-}
-
-func (m *threadUnsafeMatcher) Remove(key fmt.Stringer) {
-	m.Update(key, func(interface{}) interface{} { return nil }, false)
 }
 
 func (m *threadUnsafeMatcher) findPrefix(s string, all bool) (prefix []string) {
@@ -38,8 +27,7 @@ func (m *threadUnsafeMatcher) findPrefix(s string, all bool) (prefix []string) {
 	return
 }
 
-func (m *threadUnsafeMatcher) Update(key fmt.Stringer, f func(interface{}) interface{}, lpm bool) {
-	s := key.String()
+func (m *threadUnsafeMatcher) Update(s string, f func(interface{}) interface{}, lpm bool) {
 	if lpm {
 		prefix := m.findPrefix(s, false)
 		if len(prefix) == 0 {
@@ -53,8 +41,8 @@ func (m *threadUnsafeMatcher) Update(key fmt.Stringer, f func(interface{}) inter
 	}
 }
 
-func (m *threadUnsafeMatcher) UpdateAll(key fmt.Stringer, f func(string, interface{}) interface{}) {
-	for _, s := range m.findPrefix(key.String(), true) {
+func (m *threadUnsafeMatcher) UpdateAll(s string, f func(string, interface{}) interface{}) {
+	for _, s := range m.findPrefix(s, true) {
 		m.table[s] = f(s, m.table[s])
 		if m.table[s] == nil {
 			delete(m.table, s)
@@ -62,10 +50,19 @@ func (m *threadUnsafeMatcher) UpdateAll(key fmt.Stringer, f func(string, interfa
 	}
 }
 
-func (m *threadUnsafeMatcher) Match(key fmt.Stringer) interface{} {
-	prefix := m.findPrefix(key.String(), false)
+func (m *threadUnsafeMatcher) Match(s string, f func(interface{})) {
+	prefix := m.findPrefix(s, false)
 	if len(prefix) == 0 {
-		return nil
+		return
 	}
-	return m.table[prefix[0]]
+	f(m.table[prefix[0]])
+}
+
+func (m *threadUnsafeMatcher) Visit(f func(string, interface{}) interface{}) {
+	for s := range m.table {
+		m.table[s] = f(s, m.table[s])
+		if m.table[s] == nil {
+			delete(m.table, s)
+		}
+	}
 }

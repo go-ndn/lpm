@@ -1,9 +1,6 @@
 package lpm
 
-import (
-	"fmt"
-	"sync"
-)
+import "sync"
 
 type threadSafeMatcher struct {
 	u threadUnsafeMatcher
@@ -14,32 +11,26 @@ func newThreadSafeMatcher() *threadSafeMatcher {
 	return &threadSafeMatcher{u: *newThreadUnsafeMatcher()}
 }
 
-func (m *threadSafeMatcher) Add(key fmt.Stringer, i interface{}) {
+func (m *threadSafeMatcher) Update(s string, f func(interface{}) interface{}, lpm bool) {
 	m.Lock()
-	m.u.Add(key, i)
+	m.u.Update(s, f, lpm)
 	m.Unlock()
 }
 
-func (m *threadSafeMatcher) Remove(key fmt.Stringer) {
+func (m *threadSafeMatcher) UpdateAll(s string, f func(string, interface{}) interface{}) {
 	m.Lock()
-	m.u.Remove(key)
+	m.u.UpdateAll(s, f)
 	m.Unlock()
 }
 
-func (m *threadSafeMatcher) Update(key fmt.Stringer, f func(interface{}) interface{}, lpm bool) {
-	m.Lock()
-	m.u.Update(key, f, lpm)
-	m.Unlock()
-}
-
-func (m *threadSafeMatcher) UpdateAll(key fmt.Stringer, f func(string, interface{}) interface{}) {
-	m.Lock()
-	m.u.UpdateAll(key, f)
-	m.Unlock()
-}
-
-func (m *threadSafeMatcher) Match(key fmt.Stringer) interface{} {
+func (m *threadSafeMatcher) Match(s string, f func(interface{})) {
 	m.RLock()
-	defer m.RUnlock()
-	return m.u.Match(key)
+	m.u.Match(s, f)
+	m.RUnlock()
+}
+
+func (m *threadSafeMatcher) Visit(f func(string, interface{}) interface{}) {
+	m.Lock()
+	m.u.Visit(f)
+	m.Unlock()
 }
