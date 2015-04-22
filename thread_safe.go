@@ -11,15 +11,15 @@ func newThreadSafeMatcher() *threadSafeMatcher {
 	return &threadSafeMatcher{u: newThreadUnsafeMatcher()}
 }
 
-func (m *threadSafeMatcher) Update(s string, f func(interface{}) interface{}, lpm bool) {
+func (m *threadSafeMatcher) Update(s string, f func(interface{}) interface{}, exist bool) {
 	m.mu.Lock()
-	m.u.Update(s, f, lpm)
+	m.u.Update(s, f, exist)
 	m.mu.Unlock()
 }
 
-func (m *threadSafeMatcher) UpdateAll(s string, f func(string, interface{}) interface{}) {
+func (m *threadSafeMatcher) UpdateAll(s string, f func(string, interface{}) interface{}, exist bool) {
 	m.mu.Lock()
-	m.u.UpdateAll(s, f)
+	m.u.UpdateAll(s, f, exist)
 	m.mu.Unlock()
 }
 

@@ -68,7 +68,7 @@ func TestLPM(t *testing.T) {
 			return 2
 		}
 		return 1
-	})
+	}, true)
 	for _, test := range []test{
 		{"1/2/4/5", 1},
 		{"1/2/4", 2},

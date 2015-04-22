@@ -3,7 +3,7 @@ package lpm
 
 type Matcher interface {
 	Update(string, func(interface{}) interface{}, bool)
-	UpdateAll(string, func(string, interface{}) interface{})
+	UpdateAll(string, func(string, interface{}) interface{}, bool)
 	Match(string, func(interface{}))
 	Visit(func(string, interface{}) interface{})
 }
