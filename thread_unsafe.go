@@ -25,25 +25,7 @@ func prefixOf(s string) (prefix []string) {
 	return
 }
 
-func (m *threadUnsafeMatcher) Update(s string, f func(interface{}) interface{}, exist bool) {
-	if exist {
-		for _, prefix := range prefixOf(s) {
-			if _, ok := m.table[prefix]; !ok {
-				continue
-			}
-			s = prefix
-			goto UPDATE
-		}
-		return
-	}
-UPDATE:
-	m.table[s] = f(m.table[s])
-	if m.table[s] == nil {
-		delete(m.table, s)
-	}
-}
-
-func (m *threadUnsafeMatcher) UpdateAll(s string, f func(string, interface{}) interface{}, exist bool) {
+func (m *threadUnsafeMatcher) update(s string, f func(string, interface{}) interface{}, exist, all bool) {
 	for _, prefix := range prefixOf(s) {
 		if _, ok := m.table[prefix]; exist && !ok {
 			continue
@@ -52,12 +34,25 @@ func (m *threadUnsafeMatcher) UpdateAll(s string, f func(string, interface{}) in
 		if m.table[prefix] == nil {
 			delete(m.table, prefix)
 		}
+		if !all {
+			break
+		}
 	}
 }
 
-func (m *threadUnsafeMatcher) Match(s string, f func(interface{})) {
+func (m *threadUnsafeMatcher) Update(s string, f func(interface{}) interface{}, exist bool) {
+	m.update(s, func(_ string, v interface{}) interface{} {
+		return f(v)
+	}, exist, false)
+}
+
+func (m *threadUnsafeMatcher) UpdateAll(s string, f func(string, interface{}) interface{}, exist bool) {
+	m.update(s, f, exist, true)
+}
+
+func (m *threadUnsafeMatcher) Match(s string, f func(interface{}), exist bool) {
 	for _, prefix := range prefixOf(s) {
-		if _, ok := m.table[prefix]; !ok {
+		if _, ok := m.table[prefix]; exist && !ok {
 			continue
 		}
 		f(m.table[prefix])

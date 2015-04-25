@@ -19,7 +19,7 @@ func remove(m Matcher, s string) {
 }
 
 func match(m Matcher, s string) (r interface{}) {
-	m.Match(s, func(v interface{}) { r = v })
+	m.Match(s, func(v interface{}) { r = v }, true)
 	return
 }
 

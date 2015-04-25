@@ -23,9 +23,9 @@ func (m *threadSafeMatcher) UpdateAll(s string, f func(string, interface{}) inte
 	m.mu.Unlock()
 }
 
-func (m *threadSafeMatcher) Match(s string, f func(interface{})) {
+func (m *threadSafeMatcher) Match(s string, f func(interface{}), exist bool) {
 	m.mu.RLock()
-	m.u.Match(s, f)
+	m.u.Match(s, f, exist)
 	m.mu.RUnlock()
 }
 
