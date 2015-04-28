@@ -5,11 +5,6 @@ import (
 	"testing"
 )
 
-type test struct {
-	in   string
-	want interface{}
-}
-
 func add(m Matcher, s string, v int) {
 	m.Update(s, func(interface{}) interface{} { return v }, false)
 }
@@ -31,7 +26,10 @@ func TestLPM(t *testing.T) {
 	add(m, "1/2/4", 124)
 	add(m, "1/2/4/5", 1245)
 
-	for _, test := range []test{
+	for _, test := range []struct {
+		in   string
+		want interface{}
+	}{
 		{"2", nil},
 		{"1/2/3/4", 123},
 	} {
@@ -42,7 +40,10 @@ func TestLPM(t *testing.T) {
 	}
 
 	remove(m, "1/2/3")
-	for _, test := range []test{
+	for _, test := range []struct {
+		in   string
+		want int
+	}{
 		{"1/2/3", 12},
 	} {
 		got := match(m, test.in)
@@ -54,7 +55,10 @@ func TestLPM(t *testing.T) {
 	m.Update("1/2/5", func(interface{}) interface{} {
 		return 125
 	}, true)
-	for _, test := range []test{
+	for _, test := range []struct {
+		in   string
+		want int
+	}{
 		{"1/2", 125},
 	} {
 		got := match(m, test.in)
@@ -69,7 +73,10 @@ func TestLPM(t *testing.T) {
 		}
 		return 1
 	}, true)
-	for _, test := range []test{
+	for _, test := range []struct {
+		in   string
+		want int
+	}{
 		{"1/2/4/5", 1},
 		{"1/2/4", 2},
 		{"1/2/3", 1},
