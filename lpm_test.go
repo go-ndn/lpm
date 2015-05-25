@@ -35,7 +35,7 @@ func TestLPM(t *testing.T) {
 	} {
 		got := match(m, test.in)
 		if got != test.want {
-			t.Fatalf("Match(%s) == %v, got %v", test.in, test.want, got)
+			t.Fatalf("Match(%v) == %v, got %v", test.in, test.want, got)
 		}
 	}
 
@@ -48,7 +48,7 @@ func TestLPM(t *testing.T) {
 	} {
 		got := match(m, test.in)
 		if got != test.want {
-			t.Fatalf("Match(%s) == %v, got %v", test.in, test.want, got)
+			t.Fatalf("Match(%v) == %v, got %v", test.in, test.want, got)
 		}
 	}
 
@@ -63,7 +63,7 @@ func TestLPM(t *testing.T) {
 	} {
 		got := match(m, test.in)
 		if got != test.want {
-			t.Fatalf("Match(%s) == %v, got %v", test.in, test.want, got)
+			t.Fatalf("Match(%v) == %v, got %v", test.in, test.want, got)
 		}
 	}
 
@@ -85,7 +85,7 @@ func TestLPM(t *testing.T) {
 	} {
 		got := match(m, test.in)
 		if got != test.want {
-			t.Fatalf("Match(%s) == %v, got %v", test.in, test.want, got)
+			t.Fatalf("Match(%v) == %v, got %v", test.in, test.want, got)
 		}
 	}
 }
