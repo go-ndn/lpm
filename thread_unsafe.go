@@ -10,31 +10,30 @@ func newThreadUnsafeMatcher() *threadUnsafeMatcher {
 	return &threadUnsafeMatcher{table: make(map[string]interface{})}
 }
 
-func prefixOf(s string) (prefix []string) {
-	for {
-		if s == "" {
-			break
-		}
-		prefix = append(prefix, s)
-		i := strings.LastIndex(s, "/")
-		if i == -1 {
-			break
-		}
-		s = s[:i]
+func prefixOf(s string) string {
+	i := strings.LastIndex(s, "/")
+	if i == -1 {
+		return ""
 	}
-	return
+	return s[:i]
 }
 
 func (m *threadUnsafeMatcher) update(s string, f func(string, interface{}) interface{}, exist, all bool) {
-	for _, prefix := range prefixOf(s) {
-		if _, ok := m.table[prefix]; exist && !ok {
+	for s != "" {
+		v, ok := m.table[s]
+		if exist && !ok {
+			s = prefixOf(s)
 			continue
 		}
-		m.table[prefix] = f(prefix, m.table[prefix])
-		if m.table[prefix] == nil {
-			delete(m.table, prefix)
+		v = f(s, v)
+		if v == nil {
+			delete(m.table, s)
+		} else {
+			m.table[s] = v
 		}
-		if !all {
+		if all {
+			s = prefixOf(s)
+		} else {
 			break
 		}
 	}
@@ -51,20 +50,24 @@ func (m *threadUnsafeMatcher) UpdateAll(s string, f func(string, interface{}) in
 }
 
 func (m *threadUnsafeMatcher) Match(s string, f func(interface{}), exist bool) {
-	for _, prefix := range prefixOf(s) {
-		if _, ok := m.table[prefix]; exist && !ok {
+	for s != "" {
+		v, ok := m.table[s]
+		if exist && !ok {
+			s = prefixOf(s)
 			continue
 		}
-		f(m.table[prefix])
+		f(v)
 		break
 	}
 }
 
 func (m *threadUnsafeMatcher) Visit(f func(string, interface{}) interface{}) {
-	for s := range m.table {
-		m.table[s] = f(s, m.table[s])
-		if m.table[s] == nil {
+	for s, v := range m.table {
+		v = f(s, v)
+		if v == nil {
 			delete(m.table, s)
+		} else {
+			m.table[s] = v
 		}
 	}
 }
