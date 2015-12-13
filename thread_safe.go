@@ -7,8 +7,8 @@ type threadSafeMatcher struct {
 	sync.RWMutex
 }
 
-func newThreadSafeMatcher() *threadSafeMatcher {
-	return &threadSafeMatcher{Matcher: newThreadUnsafeMatcher()}
+func NewThreadSafe() Matcher {
+	return &threadSafeMatcher{Matcher: New()}
 }
 
 func (m *threadSafeMatcher) Update(s string, f func(interface{}) interface{}, exist bool) {

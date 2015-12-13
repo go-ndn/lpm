@@ -7,11 +7,3 @@ type Matcher interface {
 	Match(string, func(interface{}), bool)
 	Visit(func(string, interface{}) interface{})
 }
-
-func New() Matcher {
-	return newThreadUnsafeMatcher()
-}
-
-func NewThreadSafe() Matcher {
-	return newThreadSafeMatcher()
-}

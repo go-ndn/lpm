@@ -6,7 +6,7 @@ type threadUnsafeMatcher struct {
 	table map[string]interface{}
 }
 
-func newThreadUnsafeMatcher() *threadUnsafeMatcher {
+func New() Matcher {
 	return &threadUnsafeMatcher{table: make(map[string]interface{})}
 }
 

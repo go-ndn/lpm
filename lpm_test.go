@@ -42,8 +42,10 @@ func TestLPM(t *testing.T) {
 	remove(m, "1/2/3")
 	for _, test := range []struct {
 		in   string
-		want int
+		want interface{}
 	}{
+		{"2", nil},
+		{"1/2/3/4", 12},
 		{"1/2/3", 12},
 	} {
 		got := match(m, test.in)
@@ -57,8 +59,10 @@ func TestLPM(t *testing.T) {
 	}, true)
 	for _, test := range []struct {
 		in   string
-		want int
+		want interface{}
 	}{
+		{"2", nil},
+		{"1/2/3/4", 125},
 		{"1/2", 125},
 	} {
 		got := match(m, test.in)
@@ -75,8 +79,9 @@ func TestLPM(t *testing.T) {
 	}, true)
 	for _, test := range []struct {
 		in   string
-		want int
+		want interface{}
 	}{
+		{"2", nil},
 		{"1/2/4/5", 1},
 		{"1/2/4", 2},
 		{"1/2/3", 1},
