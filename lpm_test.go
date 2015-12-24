@@ -1,7 +1,7 @@
 package lpm
 
 import (
-	"strings"
+	"bytes"
 	"testing"
 )
 
@@ -71,8 +71,8 @@ func TestLPM(t *testing.T) {
 		}
 	}
 
-	m.UpdateAll("1/2/4/5", func(s string, i interface{}) interface{} {
-		if strings.Count(s, "/")%2 == 0 {
+	m.UpdateAll("1/2/4/5", func(b []byte, i interface{}) interface{} {
+		if bytes.Count(b, []byte{'/'})%2 == 0 {
 			return 2
 		}
 		return 1
