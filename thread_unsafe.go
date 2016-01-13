@@ -1,6 +1,10 @@
 package lpm
 
-import "bytes"
+import (
+	"bytes"
+
+	"github.com/go-ndn/tlv"
+)
 
 type threadUnsafeMatcher struct {
 	table map[string]interface{}
@@ -10,7 +14,7 @@ type threadUnsafeMatcher struct {
 func New() Matcher {
 	return &threadUnsafeMatcher{
 		table: make(map[string]interface{}),
-		b:     make([]byte, 4096),
+		b:     make([]byte, tlv.MaxSize),
 	}
 }
 
