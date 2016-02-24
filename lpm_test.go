@@ -2,76 +2,117 @@ package lpm
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 )
 
-func add(m Matcher, s string, v int) {
-	m.Update(s, func(interface{}) interface{} { return v }, false)
+func TestMatcherString(t *testing.T) {
+	testMatcher(t, false)
 }
 
-func remove(m Matcher, s string) {
-	m.Update(s, func(interface{}) interface{} { return nil }, false)
+func TestMatcherRaw(t *testing.T) {
+	testMatcher(t, true)
 }
 
-func match(m Matcher, s string) (r interface{}) {
-	m.Match(s, func(v interface{}) { r = v }, true)
+func newComponents(s string) (cs []Component) {
+	s = strings.Trim(s, "/")
+	if s == "" {
+		return
+	}
+	for _, c := range strings.Split(s, "/") {
+		cs = append(cs, Component(c))
+	}
 	return
 }
 
-func TestLPM(t *testing.T) {
+func testMatcher(t *testing.T, raw bool) {
 	m := NewThreadSafe()
-	add(m, "1", 1)
-	add(m, "1/2", 12)
-	add(m, "1/2/3", 123)
-	add(m, "1/2/4", 124)
-	add(m, "1/2/4/5", 1245)
+
+	update := func(key string, f func(interface{}) interface{}, exist bool) {
+		if raw {
+			m.UpdateRaw(newComponents(key), f, exist)
+		} else {
+			m.Update(key, f, exist)
+		}
+	}
+
+	updateAll := func(key string, f func([]byte, interface{}) interface{}, exist bool) {
+		if raw {
+			m.UpdateAllRaw(newComponents(key), f, exist)
+		} else {
+			m.UpdateAll(key, f, exist)
+		}
+	}
+
+	match := func(key string, f func(interface{}), exist bool) {
+		if raw {
+			m.MatchRaw(newComponents(key), f, exist)
+		} else {
+			m.Match(key, f, exist)
+		}
+	}
+
+	for _, test := range []struct {
+		key   string
+		value int
+	}{
+		{"/1", 1},
+		{"/1/2", 12},
+		{"/1/2/3", 123},
+		{"/1/2/4", 124},
+		{"/1/2/4/5", 1245},
+	} {
+		// add
+		update(test.key, func(interface{}) interface{} { return test.value }, false)
+	}
 
 	for _, test := range []struct {
 		in   string
 		want interface{}
 	}{
-		{"2", nil},
-		{"1/2/3/4", 123},
+		{"/2", nil},
+		{"/1/2/3/4", 123},
 	} {
-		got := match(m, test.in)
-		if got != test.want {
-			t.Fatalf("Match(%v) == %v, got %v", test.in, test.want, got)
-		}
+		match(test.in, func(got interface{}) {
+			if got != test.want {
+				t.Fatalf("Match(%v) == %v, got %v", test.in, test.want, got)
+			}
+		}, true)
 	}
 
-	remove(m, "1/2/3")
+	update("/1/2/3", func(interface{}) interface{} { return nil }, false)
 	for _, test := range []struct {
 		in   string
 		want interface{}
 	}{
-		{"2", nil},
-		{"1/2/3/4", 12},
-		{"1/2/3", 12},
+		{"/2", nil},
+		{"/1/2/3/4", 12},
+		{"/1/2/3", 12},
 	} {
-		got := match(m, test.in)
-		if got != test.want {
-			t.Fatalf("Match(%v) == %v, got %v", test.in, test.want, got)
-		}
+		match(test.in, func(got interface{}) {
+			if got != test.want {
+				t.Fatalf("Match(%v) == %v, got %v", test.in, test.want, got)
+			}
+		}, true)
 	}
 
-	m.Update("1/2/5", func(interface{}) interface{} {
-		return 125
-	}, true)
+	update("/1/2/5", func(interface{}) interface{} { return 125 }, true)
 	for _, test := range []struct {
 		in   string
 		want interface{}
 	}{
-		{"2", nil},
-		{"1/2/3/4", 125},
-		{"1/2", 125},
+		{"/2", nil},
+		{"/1/2/3/4", 125},
+		{"/1/2", 125},
 	} {
-		got := match(m, test.in)
-		if got != test.want {
-			t.Fatalf("Match(%v) == %v, got %v", test.in, test.want, got)
-		}
+		match(test.in, func(got interface{}) {
+			if got != test.want {
+				t.Fatalf("Match(%v) == %v, got %v", test.in, test.want, got)
+			}
+		}, true)
 	}
 
-	m.UpdateAll("1/2/4/5", func(b []byte, i interface{}) interface{} {
+	updateAll("/1/2/4/5", func(b []byte, i interface{}) interface{} {
 		if bytes.Count(b, []byte{'/'})%2 == 0 {
 			return 2
 		}
@@ -81,16 +122,26 @@ func TestLPM(t *testing.T) {
 		in   string
 		want interface{}
 	}{
-		{"2", nil},
-		{"1/2/4/5", 1},
-		{"1/2/4", 2},
-		{"1/2/3", 1},
-		{"1/2", 1},
-		{"1", 2},
+		{"/2", nil},
+		{"/1/2/4/5", 2},
+		{"/1/2/4", 1},
+		{"/1/2/3", 2},
+		{"/1/2", 2},
+		{"/1", 1},
 	} {
-		got := match(m, test.in)
-		if got != test.want {
-			t.Fatalf("Match(%v) == %v, got %v", test.in, test.want, got)
-		}
+		match(test.in, func(got interface{}) {
+			if got != test.want {
+				t.Fatalf("Match(%v) == %v, got %v", test.in, test.want, got)
+			}
+		}, true)
+	}
+
+	var count int
+	m.Visit(func(_ string, v interface{}) interface{} {
+		count++
+		return v
+	})
+	if count != 4 {
+		t.Fatalf("expect entry count to be 4, got %v", count)
 	}
 }
