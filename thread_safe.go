@@ -7,6 +7,7 @@ type threadSafeMatcher struct {
 	sync.Mutex
 }
 
+// NewThreadSafe creates a new thread-safe matcher.
 func NewThreadSafe() Matcher {
 	return &threadSafeMatcher{Matcher: New()}
 }

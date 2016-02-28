@@ -11,6 +11,7 @@ type threadUnsafeMatcher struct {
 	b     []byte
 }
 
+// New creates a new thread-unsafe matcher.
 func New() Matcher {
 	return &threadUnsafeMatcher{
 		table: make(map[string]interface{}),
