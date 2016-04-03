@@ -1,55 +1,20 @@
 package lpm
 
-import (
-	"bytes"
-	"strings"
-	"testing"
-)
+import "testing"
 
-func TestMatcherString(t *testing.T) {
-	testMatcher(t, false)
-}
-
-func TestMatcherRaw(t *testing.T) {
-	testMatcher(t, true)
-}
-
-func newComponents(s string) (cs []Component) {
-	s = strings.Trim(s, "/")
-	if s == "" {
-		return
-	}
-	for _, c := range strings.Split(s, "/") {
-		cs = append(cs, Component(c))
-	}
-	return
-}
-
-func testMatcher(t *testing.T, raw bool) {
+func TestMatcher(t *testing.T) {
 	m := NewThreadSafe()
 
 	update := func(key string, f func(interface{}) interface{}, exist bool) {
-		if raw {
-			m.UpdateRaw(newComponents(key), f, exist)
-		} else {
-			m.Update(key, f, exist)
-		}
+		m.Update(NewComponents(key), f, exist)
 	}
 
-	updateAll := func(key string, f func([]byte, interface{}) interface{}, exist bool) {
-		if raw {
-			m.UpdateAllRaw(newComponents(key), f, exist)
-		} else {
-			m.UpdateAll(key, f, exist)
-		}
+	updateAll := func(key string, f func([]Component, interface{}) interface{}, exist bool) {
+		m.UpdateAll(NewComponents(key), f, exist)
 	}
 
 	match := func(key string, f func(interface{}), exist bool) {
-		if raw {
-			m.MatchRaw(newComponents(key), f, exist)
-		} else {
-			m.Match(key, f, exist)
-		}
+		m.Match(NewComponents(key), f, exist)
 	}
 
 	for _, test := range []struct {
@@ -112,8 +77,8 @@ func testMatcher(t *testing.T, raw bool) {
 		}, true)
 	}
 
-	updateAll("/1/2/4/5", func(b []byte, i interface{}) interface{} {
-		if bytes.Count(b, []byte{'/'})%2 == 0 {
+	updateAll("/1/2/4/5", func(key []Component, i interface{}) interface{} {
+		if len(key)%2 == 0 {
 			return 2
 		}
 		return 1
@@ -137,7 +102,7 @@ func testMatcher(t *testing.T, raw bool) {
 	}
 
 	var count int
-	m.Visit(func(_ string, v interface{}) interface{} {
+	m.Visit(func(_ []Component, v interface{}) interface{} {
 		count++
 		return v
 	})

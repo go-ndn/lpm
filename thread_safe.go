@@ -4,7 +4,7 @@ import "sync"
 
 type threadSafeMatcher struct {
 	Matcher
-	sync.Mutex
+	sync.RWMutex
 }
 
 // NewThreadSafe creates a new thread-safe matcher.
@@ -12,43 +12,25 @@ func NewThreadSafe() Matcher {
 	return &threadSafeMatcher{Matcher: New()}
 }
 
-func (m *threadSafeMatcher) Update(s string, f func(interface{}) interface{}, exist bool) {
+func (m *threadSafeMatcher) Update(key []Component, f func(interface{}) interface{}, exist bool) {
 	m.Lock()
-	m.Matcher.Update(s, f, exist)
+	m.Matcher.Update(key, f, exist)
 	m.Unlock()
 }
 
-func (m *threadSafeMatcher) UpdateRaw(key []Component, f func(interface{}) interface{}, exist bool) {
+func (m *threadSafeMatcher) UpdateAll(key []Component, f func([]Component, interface{}) interface{}, exist bool) {
 	m.Lock()
-	m.Matcher.UpdateRaw(key, f, exist)
+	m.Matcher.UpdateAll(key, f, exist)
 	m.Unlock()
 }
 
-func (m *threadSafeMatcher) UpdateAll(s string, f func([]byte, interface{}) interface{}, exist bool) {
-	m.Lock()
-	m.Matcher.UpdateAll(s, f, exist)
-	m.Unlock()
+func (m *threadSafeMatcher) Match(key []Component, f func(interface{}), exist bool) {
+	m.RLock()
+	m.Matcher.Match(key, f, exist)
+	m.RUnlock()
 }
 
-func (m *threadSafeMatcher) UpdateAllRaw(key []Component, f func([]byte, interface{}) interface{}, exist bool) {
-	m.Lock()
-	m.Matcher.UpdateAllRaw(key, f, exist)
-	m.Unlock()
-}
-
-func (m *threadSafeMatcher) Match(s string, f func(interface{}), exist bool) {
-	m.Lock()
-	m.Matcher.Match(s, f, exist)
-	m.Unlock()
-}
-
-func (m *threadSafeMatcher) MatchRaw(key []Component, f func(interface{}), exist bool) {
-	m.Lock()
-	m.Matcher.MatchRaw(key, f, exist)
-	m.Unlock()
-}
-
-func (m *threadSafeMatcher) Visit(f func(string, interface{}) interface{}) {
+func (m *threadSafeMatcher) Visit(f func([]Component, interface{}) interface{}) {
 	m.Lock()
 	m.Matcher.Visit(f)
 	m.Unlock()
