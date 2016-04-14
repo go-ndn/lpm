@@ -2,7 +2,7 @@ package lpm
 
 type node struct {
 	val   interface{}
-	table map[string]*node
+	table map[string]node
 }
 
 func (n *node) empty() bool {
@@ -28,7 +28,7 @@ func (n *node) update(key []Component, depth int, f func([]Component, interface{
 			try()
 			return
 		}
-		n.table = make(map[string]*node)
+		n.table = make(map[string]node)
 	}
 
 	v, ok := n.table[string(key[depth])]
@@ -37,8 +37,6 @@ func (n *node) update(key []Component, depth int, f func([]Component, interface{
 			try()
 			return
 		}
-		v = &node{}
-		n.table[string(key[depth])] = v
 	}
 
 	if all {
@@ -48,6 +46,8 @@ func (n *node) update(key []Component, depth int, f func([]Component, interface{
 	v.update(key, depth+1, f, exist, all)
 	if v.empty() {
 		delete(n.table, string(key[depth]))
+	} else {
+		n.table[string(key[depth])] = v
 	}
 }
 
@@ -91,6 +91,8 @@ func (n *node) visit(key []Component, f func([]Component, interface{}) interface
 		v.visit(append(key, Component(k)), f)
 		if v.empty() {
 			delete(n.table, k)
+		} else {
+			n.table[k] = v
 		}
 	}
 }
