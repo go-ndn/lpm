@@ -29,14 +29,3 @@ func NewComponents(s string) (cs []Component) {
 func (c Component) String() string {
 	return url.QueryEscape(string(c))
 }
-
-// Matcher performs longest prefix match on components.
-//
-// If func returns nil, the entry will be removed.
-// If bool is false, exact match will be performed instead.
-type Matcher interface {
-	Update([]Component, func(interface{}) interface{}, bool)
-	UpdateAll([]Component, func([]Component, interface{}) interface{}, bool)
-	Match([]Component, func(interface{}), bool)
-	Visit(func([]Component, interface{}) interface{})
-}
