@@ -13,7 +13,10 @@ type Component []byte
 //
 // See https://en.wikipedia.org/wiki/Percent-encoding.
 func NewComponents(s string) (cs []Component) {
-	s = strings.Trim(s, "/")
+	if !strings.HasPrefix(s, "/") {
+		return
+	}
+	s = s[1:]
 	if s == "" {
 		return
 	}
