@@ -25,9 +25,6 @@ func (n *node) empty() bool {
 
 func (n *node) update(key []lpm.Component, depth int, f func([]lpm.Component, Type) Type, exist, all bool) {
 	try := func() {
-		if depth == 0 {
-			return
-		}
 		if !exist || !nodeValEmpty(n.val) {
 			n.val = f(key[:depth], n.val)
 		}
@@ -67,9 +64,6 @@ func (n *node) update(key []lpm.Component, depth int, f func([]lpm.Component, Ty
 
 func (n *node) match(key []lpm.Component, depth int, f func(Type), exist bool) {
 	try := func() {
-		if depth == 0 {
-			return
-		}
 		if !exist || !nodeValEmpty(n.val) {
 			f(n.val)
 		}
