@@ -116,7 +116,7 @@ func TestMatcher(t *testing.T) {
 		count++
 		return v
 	})
-	if count != 4 {
-		t.Fatalf("expect entry count to be 4, got %v", count)
+	if want := 4; count != want {
+		t.Fatalf("expect entry count to be %d, got %d", want, count)
 	}
 }
