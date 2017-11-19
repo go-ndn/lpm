@@ -6,26 +6,8 @@ import (
 	"github.com/go-ndn/lpm"
 )
 
-func init() {
-	nodeValEmpty = func(t Type) bool {
-		return t == 0
-	}
-}
-
 func TestMatcher(t *testing.T) {
 	var m TypeMatcher
-
-	update := func(key string, f func(Type) Type, exist bool) {
-		m.Update(lpm.NewComponents(key), f, exist)
-	}
-
-	updateAll := func(key string, f func([]lpm.Component, Type) Type, exist bool) {
-		m.UpdateAll(lpm.NewComponents(key), f, exist)
-	}
-
-	match := func(key string, f func(Type), exist bool) {
-		m.Match(lpm.NewComponents(key), f, exist)
-	}
 
 	for _, test := range []struct {
 		key   string
@@ -38,7 +20,7 @@ func TestMatcher(t *testing.T) {
 		{"/1/2/4/5", 1245},
 	} {
 		// add
-		update(test.key, func(Type) Type { return test.value }, false)
+		m.Update(lpm.NewComponents(test.key), test.value)
 	}
 
 	for _, test := range []struct {
@@ -48,14 +30,13 @@ func TestMatcher(t *testing.T) {
 		{"/2", 0},
 		{"/1/2/3/4", 123},
 	} {
-		match(test.in, func(got Type) {
-			if got != test.want {
-				t.Fatalf("Match(%v) == %v, got %v", test.in, test.want, got)
-			}
-		}, true)
+		got, _ := m.Match(lpm.NewComponents(test.in))
+		if got != test.want {
+			t.Fatalf("Match(%v) == %v, got %v", test.in, test.want, got)
+		}
 	}
 
-	update("/1/2/3", func(Type) Type { return 0 }, false)
+	m.Delete(lpm.NewComponents("/1/2/3"))
 	for _, test := range []struct {
 		in   string
 		want Type
@@ -64,14 +45,13 @@ func TestMatcher(t *testing.T) {
 		{"/1/2/3/4", 12},
 		{"/1/2/3", 12},
 	} {
-		match(test.in, func(got Type) {
-			if got != test.want {
-				t.Fatalf("Match(%v) == %v, got %v", test.in, test.want, got)
-			}
-		}, true)
+		got, _ := m.Match(lpm.NewComponents(test.in))
+		if got != test.want {
+			t.Fatalf("Match(%v) == %v, got %v", test.in, test.want, got)
+		}
 	}
 
-	update("/1/2/5", func(Type) Type { return 125 }, true)
+	m.Update(lpm.NewComponents("/1/2"), 125)
 	for _, test := range []struct {
 		in   string
 		want Type
@@ -80,19 +60,18 @@ func TestMatcher(t *testing.T) {
 		{"/1/2/3/4", 125},
 		{"/1/2", 125},
 	} {
-		match(test.in, func(got Type) {
-			if got != test.want {
-				t.Fatalf("Match(%v) == %v, got %v", test.in, test.want, got)
-			}
-		}, true)
+		got, _ := m.Match(lpm.NewComponents(test.in))
+		if got != test.want {
+			t.Fatalf("Match(%v) == %v, got %v", test.in, test.want, got)
+		}
 	}
 
-	updateAll("/1/2/4/5", func(key []lpm.Component, i Type) Type {
+	m.UpdateAll(lpm.NewComponents("/1/2/4/5"), func(key []lpm.Component, i Type) (Type, bool) {
 		if len(key)%2 == 0 {
-			return 2
+			return 2, false
 		}
-		return 1
-	}, true)
+		return 1, false
+	})
 	for _, test := range []struct {
 		in   string
 		want Type
@@ -104,17 +83,16 @@ func TestMatcher(t *testing.T) {
 		{"/1/2", 2},
 		{"/1", 1},
 	} {
-		match(test.in, func(got Type) {
-			if got != test.want {
-				t.Fatalf("Match(%v) == %v, got %v", test.in, test.want, got)
-			}
-		}, true)
+		got, _ := m.Match(lpm.NewComponents(test.in))
+		if got != test.want {
+			t.Fatalf("Match(%v) == %v, got %v", test.in, test.want, got)
+		}
 	}
 
 	var count int
-	m.Visit(func(_ []lpm.Component, v Type) Type {
+	m.Visit(func(_ []lpm.Component, v Type) (Type, bool) {
 		count++
-		return v
+		return v, false
 	})
 	if want := 4; count != want {
 		t.Fatalf("expect entry count to be %d, got %d", want, count)
